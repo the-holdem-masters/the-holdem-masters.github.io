@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0906">
+<meta name="robots" content="noindex">
+<title>8th THE HOLDEM MASTERS · 좌석 조회</title>
+<link rel="icon" href="logo.webp">
+<style>
+  :root {
+    --bg: #0b0906;
+    --panel: #15110b;
+    --line: #3a2f1c;
+    --gold: #d9b470;
+    --gold-deep: #a8792f;
+    --text: #f4ecdc;
+    --muted: #9c917c;
+    --red: #e2231a;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+    background:
+      radial-gradient(120% 60% at 50% 0%, #2a2012 0%, rgba(11, 9, 6, 0) 70%),
+      var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard",
+      "Malgun Gothic", "Noto Sans KR", system-ui, sans-serif;
+    display: flex;
+    justify-content: center;
+  }
+  main {
+    width: 100%;
+    max-width: 440px;
+    padding: 28px 20px calc(28px + env(safe-area-inset-bottom));
+    display: flex;
+    flex-direction: column;
+  }
+  .logo {
+    display: block;
+    width: 72%;
+    max-width: 280px;
+    height: auto;
+    margin: 0 auto 6px;
+  }
+  h1 {
+    margin: 14px 0 22px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.32em;
+    text-indent: 0.32em;
+    color: var(--gold);
+  }
+  h1 span {
+    display: block;
+    margin-top: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.24em;
+    text-indent: 0.24em;
+    color: var(--muted);
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 22px 18px;
+  }
+  label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gold);
+  }
+  label small {
+    margin-left: 6px;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--muted);
+  }
+  input {
+    display: block;
+    width: 100%;
+    height: 54px;
+    margin-bottom: 18px;
+    padding: 0 16px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #0d0a07;
+    color: var(--text);
+    font: inherit;
+    font-size: 18px; /* 16px 미만이면 iOS가 확대한다 */
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  input::placeholder { color: #5d5444; }
+  input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(217, 180, 112, 0.18); }
+  #phone { letter-spacing: 0.4em; font-variant-numeric: tabular-nums; }
+  #phone::placeholder { letter-spacing: 0.1em; }
+  button {
+    display: block;
+    width: 100%;
+    height: 56px;
+    border: 0;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #e6c688 0%, var(--gold-deep) 100%);
+    color: #1a1206;
+    font: inherit;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button:active { filter: brightness(0.9); }
+  button.ghost {
+    margin-top: 16px;
+    height: 50px;
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--gold);
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .msg {
+    margin: 16px 0 0;
+    padding: 14px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(226, 35, 26, 0.5);
+    background: rgba(226, 35, 26, 0.1);
+    font-size: 14px;
+    line-height: 1.55;
+    color: #ffd9d6;
+  }
+  .msg small { display: block; margin-top: 4px; font-size: 12px; color: #d9a8a4; }
+
+  .result { text-align: center; padding: 26px 18px 22px; border-color: var(--gold-deep); }
+  .who { font-size: 20px; font-weight: 700; word-break: break-all; }
+  .who small { display: block; margin-top: 4px; font-size: 12px; font-weight: 400; color: var(--muted); }
+  .seat {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    align-items: center;
+    margin: 22px 0 18px;
+    padding: 20px 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .seat i { height: 72px; background: var(--line); }
+  .seat dt {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-indent: 0.22em;
+    color: var(--muted);
+  }
+  .seat dd {
+    margin: 6px 0 0;
+    font-size: 76px;
+    line-height: 1;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    background: linear-gradient(180deg, #f3dba6 0%, var(--gold-deep) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .seat dd + span { display: block; margin-top: 6px; font-size: 14px; color: var(--text); }
+  .chips { font-size: 14px; color: var(--muted); }
+  .chips b { margin-left: 8px; font-size: 17px; color: var(--text); font-variant-numeric: tabular-nums; }
+
+  footer {
+    margin-top: auto;
+    padding-top: 26px;
+    text-align: center;
+    font-size: 11px;
+    line-height: 1.7;
+    color: #6b6252;
+  }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <img class="logo" src="logo.webp" width="680" height="498" alt="8th THE HOLDEM MASTERS · Sponsored by WPL">
+  <h1>좌석 조회<span>SEAT DRAW</span></h1>
+
+  <form class="card" id="form" autocomplete="off" novalidate>
+    <label for="name">이름<small>Name</small></label>
+    <input id="name" type="text" placeholder="홍길동" autocapitalize="off" autocorrect="off"
+           spellcheck="false" enterkeyhint="next" maxlength="40" required>
+
+    <label for="phone">휴대폰 뒷번호 4자리<small>Last 4 digits of phone</small></label>
+    <input id="phone" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="1234"
+           enterkeyhint="search" maxlength="4" required>
+
+    <button type="submit">내 좌석 확인</button>
+    <p class="msg" id="msg" role="alert" hidden></p>
+  </form>
+
+  <section id="result" hidden>
+    <div class="card result">
+      <div class="who"><span id="r-name"></span><small id="r-phone"></small></div>
+      <dl class="seat">
+        <div><dt>TABLE</dt><dd id="r-table"></dd><span>테이블</span></div>
+        <i></i>
+        <div><dt>SEAT</dt><dd id="r-seat"></dd><span>좌석</span></div>
+      </dl>
+      <div class="chips" id="r-chips-row">시작 칩<b id="r-chips"></b></div>
+    </div>
+    <button class="ghost" id="again" type="button">다시 조회하기</button>
+  </section>
+
+  <footer>
+    좌석이 조회되지 않으면 진행요원에게 문의해 주세요.<br>
+    <span id="updated"></span>
+  </footer>
+</main>
+
+<script src="seats.js"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var form = $('form'), nameEl = $('name'), phoneEl = $('phone'), msg = $('msg'), result = $('result');
+
+  if (window.SEATS_UPDATED) $('updated').textContent = '좌석 데이터 기준 ' + window.SEATS_UPDATED;
+
+  // build.py 의 norm_name() 과 반드시 같은 규칙이어야 한다
+  function normName(s) {
+    if (s.normalize) s = s.normalize('NFC');
+    return s.replace(/\s+/g, '').toUpperCase();
+  }
+
+  function sha256Hex(str) {
+    var bytes = new TextEncoder().encode(str);
+    return crypto.subtle.digest('SHA-256', bytes).then(function (buf) {
+      var a = new Uint8Array(buf), out = '';
+      for (var i = 0; i < a.length; i++) out += (a[i] < 16 ? '0' : '') + a[i].toString(16);
+      return out;
+    });
+  }
+
+  function showMsg(main, sub) {
+    msg.textContent = main;
+    if (sub) {
+      var s = document.createElement('small');
+      s.textContent = sub;
+      msg.appendChild(s);
+    }
+    msg.hidden = false;
+  }
+
+  phoneEl.addEventListener('input', function () {
+    var v = phoneEl.value.replace(/\D/g, '').slice(0, 4);
+    if (v !== phoneEl.value) phoneEl.value = v;
+  });
+  nameEl.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); phoneEl.focus(); }
+  });
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    msg.hidden = true;
+    var name = nameEl.value.trim();
+    var last4 = phoneEl.value.replace(/\D/g, '');
+
+    if (!name) { showMsg('이름을 입력해 주세요.', 'Please enter your name.'); nameEl.focus(); return; }
+    if (last4.length !== 4) { showMsg('휴대폰 뒷번호 4자리를 입력해 주세요.', 'Please enter the last 4 digits.'); phoneEl.focus(); return; }
+    if (!window.SEATS) { showMsg('좌석 데이터를 불러오지 못했습니다. 새로고침 해주세요.', 'Please reload the page.'); return; }
+
+    sha256Hex(normName(name) + '|' + last4).then(function (hex) {
+      var hit = window.SEATS[hex.slice(0, 12)];
+      if (!hit) {
+        showMsg('일치하는 참가자를 찾지 못했습니다. 이름과 번호를 다시 확인해 주세요.',
+                'No match found. Please check your name and number, or ask the staff.');
+        return;
+      }
+      $('r-name').textContent = name;
+      $('r-phone').textContent = '010-****-' + last4;
+      $('r-table').textContent = hit[0];
+      $('r-seat').textContent = hit[1];
+      $('r-chips-row').hidden = !hit[2];
+      $('r-chips').textContent = hit[2] ? hit[2].toLocaleString('en-US') : '';
+      document.activeElement && document.activeElement.blur();
+      form.hidden = true;
+      result.hidden = false;
+      window.scrollTo(0, 0);
+    }).catch(function () {
+      showMsg('조회 중 오류가 발생했습니다. 진행요원에게 문의해 주세요.', 'Something went wrong. Please ask the staff.');
+    });
+  });
+
+  $('again').addEventListener('click', function () {
+    result.hidden = true;
+    form.hidden = false;
+    nameEl.value = '';
+    phoneEl.value = '';
+    nameEl.focus();
+  });
+})();
+</script>
+</body>
+</html>
