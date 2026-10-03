@@ -224,7 +224,10 @@
   </footer>
 </main>
 
-<script src="seats.js"></script>
+<script>
+  // 휴대폰 캐시에 남은 예전 좌석 데이터를 쓰지 않도록 매번 새로 받는다
+  document.write('<script src="seats.js?v=' + Date.now() + '"><\/script>');
+</script>
 <script>
 (function () {
   var $ = function (id) { return document.getElementById(id); };
