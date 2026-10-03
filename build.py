@@ -18,7 +18,8 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 SHEET_ID = "1MLVZFRYAZORiZvW9CNXVQCdnst_FuXPoWOT9t_OFxOo"
-URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv"
+GID = "1982395788"
+URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={GID}"
 OUT = Path(__file__).with_name("seats.js")
 
 
