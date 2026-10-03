@@ -21,6 +21,8 @@ SHEET_ID = "1MLVZFRYAZORiZvW9CNXVQCdnst_FuXPoWOT9t_OFxOo"
 GID = "1982395788"
 URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={GID}"
 OUT = Path(__file__).with_name("seats.js")
+# 시트에 번호가 없을 때 쓰는 보충 명단 (이름\t010-****-1234\t칩량). 커밋하지 않는다.
+PHONES = Path(__file__).with_name("phones.tsv")
 
 
 def norm_name(s):
@@ -34,7 +36,25 @@ def key(name, last4):
     return hashlib.sha256(raw).hexdigest()[:12]
 
 
+def load_phones():
+    # (이름, 칩량) -> 뒷4자리, 이름 하나뿐이면 이름만으로도 찾는다
+    by_chips, by_name = {}, {}
+    if not PHONES.exists():
+        return by_chips, by_name
+    for line in PHONES.read_text(encoding="utf-8-sig").splitlines():
+        parts = line.split("\t") + ["", ""]
+        digits = re.sub(r"\D", "", parts[1])
+        if len(digits) < 4:
+            continue
+        name, last4 = norm_name(parts[0]), digits[-4:]
+        chips = int(re.sub(r"\D", "", parts[2]) or 0)
+        by_chips[(name, chips)] = last4
+        by_name.setdefault(name, []).append(last4)
+    return by_chips, by_name
+
+
 def main():
+    by_chips, by_name = load_phones()
     text = urllib.request.urlopen(URL, timeout=30).read().decode("utf-8-sig")
     rows = list(csv.reader(io.StringIO(text)))
 
@@ -51,6 +71,11 @@ def main():
         if not r[2]:
             continue
         digits = re.sub(r"\D", "", r[3])
+        chips = int(re.sub(r"\D", "", r[4]) or 0)
+        if len(digits) < 4:
+            found = by_chips.get((norm_name(r[2]), chips))
+            names = by_name.get(norm_name(r[2]), [])
+            digits = found or (names[0] if len(names) == 1 else "")
         if table is None or not r[1].isdigit() or len(digits) < 4:
             problems.append(r[:6])
             continue
@@ -58,7 +83,6 @@ def main():
         if k in seats:
             problems.append(r[:6])
             continue
-        chips = int(re.sub(r"\D", "", r[4]) or 0)
         seats[k] = [table, int(r[1]), chips]
 
     if problems:
