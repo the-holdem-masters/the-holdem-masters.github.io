@@ -195,11 +195,14 @@
   <form class="card" id="form" autocomplete="off" novalidate>
     <label for="name">이름<small>Name</small></label>
     <input id="name" type="text" placeholder="홍길동" autocapitalize="off" autocorrect="off"
-           spellcheck="false" enterkeyhint="next" maxlength="40" required>
+           spellcheck="false" enterkeyhint="search" maxlength="40" required>
 
-    <label for="phone">휴대폰 뒷번호 4자리<small>Last 4 digits of phone</small></label>
-    <input id="phone" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="1234"
-           enterkeyhint="search" maxlength="4" required>
+    <!-- 동명이인일 때만 보인다 -->
+    <div id="phone-wrap" hidden>
+      <label for="phone">휴대폰 뒷번호 4자리<small>Last 4 digits of phone</small></label>
+      <input id="phone" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="1234"
+             enterkeyhint="search" maxlength="4">
+    </div>
 
     <button type="submit">내 좌석 확인</button>
     <p class="msg" id="msg" role="alert" hidden></p>
@@ -231,7 +234,8 @@
 <script>
 (function () {
   var $ = function (id) { return document.getElementById(id); };
-  var form = $('form'), nameEl = $('name'), phoneEl = $('phone'), msg = $('msg'), result = $('result');
+  var form = $('form'), nameEl = $('name'), phoneEl = $('phone'), phoneWrap = $('phone-wrap');
+  var msg = $('msg'), result = $('result');
 
   if (window.SEATS_UPDATED) $('updated').textContent = '좌석 데이터 기준 ' + window.SEATS_UPDATED;
 
@@ -264,9 +268,24 @@
     var v = phoneEl.value.replace(/\D/g, '').slice(0, 4);
     if (v !== phoneEl.value) phoneEl.value = v;
   });
-  nameEl.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); phoneEl.focus(); }
+  // 이름을 바꾸면 동명이인용 번호 칸은 다시 숨긴다
+  nameEl.addEventListener('input', function () {
+    if (!phoneWrap.hidden) { phoneWrap.hidden = true; phoneEl.value = ''; msg.hidden = true; }
   });
+
+  // build.py 형식: SEATS[sha256(이름) 앞 12자리] = [[테이블, 좌석, 칩, sha256(이름|뒷4자리) 앞 6자리], ...]
+  function lookup(name, last4) {
+    var n = normName(name);
+    return sha256Hex(n).then(function (nameHex) {
+      var list = window.SEATS[nameHex.slice(0, 12)] || [];
+      if (list.length < 2) return { hit: list[0] };
+      if (!last4) return { dup: true };
+      return sha256Hex(n + '|' + last4).then(function (hex) {
+        var k = hex.slice(0, 6);
+        return { dup: true, hit: list.filter(function (s) { return s[3] === k; })[0] };
+      });
+    });
+  }
 
   form.addEventListener('submit', function (e) {
     e.preventDefault();
@@ -275,18 +294,26 @@
     var last4 = phoneEl.value.replace(/\D/g, '');
 
     if (!name) { showMsg('이름을 입력해 주세요.', 'Please enter your name.'); nameEl.focus(); return; }
-    if (last4.length !== 4) { showMsg('휴대폰 뒷번호 4자리를 입력해 주세요.', 'Please enter the last 4 digits.'); phoneEl.focus(); return; }
+    if (!phoneWrap.hidden && last4.length !== 4) { showMsg('휴대폰 뒷번호 4자리를 입력해 주세요.', 'Please enter the last 4 digits.'); phoneEl.focus(); return; }
     if (!window.SEATS) { showMsg('좌석 데이터를 불러오지 못했습니다. 새로고침 해주세요.', 'Please reload the page.'); return; }
 
-    sha256Hex(normName(name) + '|' + last4).then(function (hex) {
-      var hit = window.SEATS[hex.slice(0, 12)];
+    lookup(name, phoneWrap.hidden ? '' : last4).then(function (r) {
+      if (r.dup && phoneWrap.hidden) {
+        phoneWrap.hidden = false;
+        showMsg('같은 이름의 참가자가 있습니다. 휴대폰 뒷번호 4자리를 입력해 주세요.',
+                'There is more than one player with this name. Please enter the last 4 digits.');
+        phoneEl.focus();
+        return;
+      }
+      var hit = r.hit;
       if (!hit) {
-        showMsg('일치하는 참가자를 찾지 못했습니다. 이름과 번호를 다시 확인해 주세요.',
-                'No match found. Please check your name and number, or ask the staff.');
+        showMsg(r.dup ? '이름과 번호가 일치하는 참가자를 찾지 못했습니다. 진행요원에게 문의해 주세요.'
+                      : '일치하는 참가자를 찾지 못했습니다. 이름을 다시 확인해 주세요.',
+                'No match found. Please check your name, or ask the staff.');
         return;
       }
       $('r-name').textContent = name;
-      $('r-phone').textContent = '010-****-' + last4;
+      $('r-phone').textContent = r.dup ? '010-****-' + last4 : '';
       $('r-table').textContent = hit[0];
       $('r-seat').textContent = hit[1];
       $('r-chips-row').hidden = !hit[2];
@@ -305,6 +332,8 @@
     form.hidden = false;
     nameEl.value = '';
     phoneEl.value = '';
+    phoneWrap.hidden = true;
+    msg.hidden = true;
     nameEl.focus();
   });
 })();
